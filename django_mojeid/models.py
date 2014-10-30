@@ -32,6 +32,7 @@ from __future__ import unicode_literals
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 
+from base64 import encodestring
 import os
 import time
 try:
@@ -53,8 +54,9 @@ class Nonce(models.Model):
     def __init__(self, *args, **kwargs):
 
         # Generate default salt
+        
         if not 'salt' in kwargs:
-            kwargs['salt'] = os.urandom(30).encode('base64')[:-1]
+            kwargs['salt'] = encodestring(os.urandom(30))[:-1].decode('ascii')
 
         # Set the timestamp if not present
         if not 'timestamp' in kwargs:
@@ -80,7 +82,7 @@ class Nonce(models.Model):
 class Association(models.Model):
     server_url = models.TextField(max_length=2047)
     handle = models.CharField(max_length=255)
-    secret = models.TextField(max_length=255)  # Stored base64 encoded
+    secret = models.BinaryField(max_length=255)
     issued = models.IntegerField()
     lifetime = models.IntegerField()
     assoc_type = models.TextField(max_length=64)
