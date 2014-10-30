@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from django.utils.translation import ugettext_lazy as _
 
 
@@ -21,7 +23,7 @@ class DiscoveryError(GeneralError):
 
     @property
     def msg(self):
-        return u'%s: %s' % (self.text, unicode(self.exception))
+        return '%s: %s' % (self.text, str(self.exception))
 
 
 class EndpointError(GeneralError):
@@ -45,7 +47,7 @@ class DisabledAccount(GeneralError):
 
     @property
     def msg(self):
-        return u'%s for User with id=%d' % (self.text, self.user.pk)
+        return '%s for User with id=%d' % (self.text, self.user.pk)
 
 
 class AuthenticationFailed(GeneralError):
@@ -59,7 +61,7 @@ class AuthenticationFailed(GeneralError):
     @property
     def msg(self):
 
-        return u'%s: %s' % (self.text, unicode(self.exception))
+        return '%s: %s' % (self.text, str(self.exception))
 
 
 class OpenIDAuthenticationFailed(GeneralError):
@@ -72,7 +74,7 @@ class OpenIDAuthenticationFailed(GeneralError):
 
     @property
     def msg(self):
-        return u'%s: %s' % (self.text, unicode(self.openid_response.message))
+        return '%s: %s' % (self.text, str(self.openid_response.message))
 
 
 class OpenIDAuthenticationCanceled(GeneralError):
@@ -90,4 +92,4 @@ class OpenIDUnknownResponseType(GeneralError):
 
     @property
     def msg(self):
-        return u'%s: %d' % (self.text, self.openid_response.status)
+        return '%s: %d' % (self.text, self.openid_response.status)

@@ -194,7 +194,7 @@ class OpenIDBackend:
             attributes = [x for x in attributes if x.updatable]
 
         for attribute in attributes:
-            if not attribute.model in res.keys():
+            if not attribute.model in res:
                 res[attribute.model] = {'user_id_field_name': attribute.user_id_field_name}
             val = attribute.get_value(fetch_response, attribute.required)
 
@@ -228,7 +228,7 @@ class OpenIDBackend:
         user = user_model(**changes[user_model])
         try:
             user.validate_unique()
-        except ValidationError, e:
+        except ValidationError as e:
             raise DuplicateUserViolation(", ".join(e.messages))
         user.save()
 
@@ -236,7 +236,7 @@ class OpenIDBackend:
         del changes[user_model]
 
         # Create other structures
-        for model, kwargs in changes.iteritems():
+        for model, kwargs in changes.items():
             foreign_key_name = kwargs['user_id_field_name']
             del kwargs['user_id_field_name']
             kwargs[foreign_key_name] = user.pk
@@ -252,7 +252,7 @@ class OpenIDBackend:
         changes = OpenIDBackend.get_model_changes(openid_response, only_updatable=True,
                                                   attribute_set=attribute_set)
 
-        for model, kwargs in changes.iteritems():
+        for model, kwargs in changes.items():
             foreign_key_name = kwargs['user_id_field_name']
             del kwargs['user_id_field_name']
             model.objects.filter(**{foreign_key_name: user_id}).update(**kwargs)

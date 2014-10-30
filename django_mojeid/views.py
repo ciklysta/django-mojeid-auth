@@ -28,9 +28,13 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import urllib
-
-from urlparse import urlsplit
+try:
+    # python3
+    from urllib.parse import urlencode, urlsplit
+except:
+    # python2
+    from urllib import urlencode
+    from urlparse import urlsplit
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
@@ -74,11 +78,11 @@ from django_mojeid.exceptions import (
 )
 from django.contrib.auth import get_user_model
 
-import errors
+from django_mojeid import errors
 
-from auth import OpenIDBackend
-from models import Nonce
-from mojeid import Assertion
+from django_mojeid.auth import OpenIDBackend
+from django_mojeid.models import Nonce
+from django_mojeid.mojeid import Assertion
 
 
 def sanitise_redirect_url(redirect_to):
@@ -138,12 +142,11 @@ def render_openid_request(request, openid_request, return_to):
 def render_failure(request, error, template_name='openid/failure.html'):
     """Render an error page to the user."""
     # Render the response to trigger_error signal
-    resp = trigger_error.send(sender=__name__, error=error, request=request)
-    resp = filter(lambda r: not r[1] is None and isinstance(r[1], HttpResponse), resp)
-    if resp:
-        # Return first valid response
-        return resp[0][1]
-
+    for r in trigger_error.send(sender=__name__, error=error, request=request):
+        resp = r[1]
+        if resp is not None and isinstance(resp, HttpResponse):
+            return resp # return first valid response if exists
+    
     # No response to signal - render default page
     data = render_to_string(template_name, {'message': error.msg},
                             context_instance=RequestContext(request))
@@ -158,7 +161,7 @@ def parse_openid_response(request):
     consumer = make_consumer(request)
     attribute_set = consumer.session.get('attribute_set', 'default')
     lang = consumer.session.get('stored_lang', 'en')
-    return attribute_set, lang, consumer.complete(dict(request.REQUEST.items()),
+    return attribute_set, lang, consumer.complete(request.REQUEST,
                                                   current_url)
 
 
@@ -200,7 +203,7 @@ def login_begin(request, attribute_set='default', form_class=OpenIDLoginForm):
         openid_url = login_form.cleaned_data['openid_identifier']
 
     consumer = make_consumer(request)
-
+    
     # Set response handler (define the settings set)
     consumer.session['attribute_set'] = attribute_set
 
@@ -210,7 +213,7 @@ def login_begin(request, attribute_set='default', form_class=OpenIDLoginForm):
 
     try:
         openid_request = consumer.begin(openid_url)
-    except DiscoveryFailure, exc:
+    except DiscoveryFailure as exc:
         return render_failure(request, errors.DiscoveryError(exc))
 
     # Request user details.
@@ -241,7 +244,7 @@ def login_begin(request, attribute_set='default', form_class=OpenIDLoginForm):
         # Django gives us Unicode, which is great.  We must encode URI.
         # urllib enforces str. We can't trust anything about the default
         # encoding inside  str(foo) , so we must explicitly make foo a str.
-        return_to += urllib.urlencode(
+        return_to += urlencode(
             {OpenIDBackend.get_redirect_field_name(): redirect_to.encode("UTF-8")})
 
     return render_openid_request(request, openid_request, return_to)
@@ -345,13 +348,14 @@ def login_complete(request):
                     return render_failure(request, errors.DisabledAccount(user_new))
                 # Create an association with the new user
                 OpenIDBackend.associate_user_with_session(request, user_new)
-        except DjangoOpenIDException, e:
+        except DjangoOpenIDException as e:
             # Something went wrong
             user_id = None
             try:
                 # Try to get user id
+
                 user_id = UserOpenID.objects.get(claimed_id=openid_response.identity_url).user_id
-            except UserOpenID.DoesNotExist, user_model.DoesNotExist:
+            except (UserOpenID.DoesNotExist, user_model.DoesNotExist):
                 # Report an error with identity_url
                 user_login_report.send(sender=__name__,
                                        request=request,
