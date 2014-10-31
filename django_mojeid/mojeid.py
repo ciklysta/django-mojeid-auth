@@ -627,14 +627,14 @@ class Student(MojeIDBooleanAttribute):
 
 
 class Validated(MojeIDBooleanAttribute):
-    # Probably not supported anymore
+    # This property is given by MojeID only if your service has full access
     code = 'validated'
     schema = 'http://specs.nic.cz/attr/contact/valid'
     text = _('Flag – Validation')  # 'Příznak – Validace'
 
 
 class Status(MojeIDAttribute):
-    # Probably not supported anymore
+    # This property is given by MojeID only if your service has full access
     code = 'status'
     schema = 'http://specs.nic.cz/attr/contact/status'
     text = _('Account State')  # 'Stav účtu'

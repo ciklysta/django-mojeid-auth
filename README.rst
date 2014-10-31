@@ -7,6 +7,8 @@ It is a fork of https://launchpad.net/django-openid-auth
 The main purpose of this fork is to remove launchpad related stuff and add mojeID related stuff.
 mojeID is a Czech openid implementation managed by `CZ.NIC z.s.p.o. <http://www.nic.cz/>`_
 
+It supports both python2 and python3. (Tested on python 2.7 and 3.4, but is expected to work on >=2.6)
+
 Basic Installation
 ------------------
 
